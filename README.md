@@ -1,33 +1,212 @@
-# colorich
-Python module - Use ANSI formatting to color output text by hexadecimal values, RGB values or by color specific name or decorate it
+# 🎨 colorich
 
-Use ANSI formatting to color output text by hexadecimal values, RGB values or by color specific name or decorate
-it.\
-The color names and values is inspired by https://www.w3schools.com/colors/colors_names.asp and
-https://github.com/jonathantneal
+<p align="center">
+  <strong>Simple, vibrant 24-bit TrueColor terminal styling for Python.</strong><br>
+  <em>Style your CLI outputs with Hex, RGB tuples, and 140+ CSS color names — effortlessly.</em>
+</p>
 
-Functions:\
-expand - Expands the colors list, extra colors will be available if this function will be executed.
+<p align="center">
+  <a href="https://pypi.org/project/colorich/"><img src="https://img.shields.io/pypi/v/colorich.svg?style=flat-square&color=blue" alt="PyPI Version"></a>
+  <a href="https://pypi.org/project/colorich/"><img src="https://img.shields.io/pypi/pyversions/colorich.svg?style=flat-square" alt="Python Versions"></a>
+  <a href="https://github.com/EthanA120/enrich/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg?style=flat-square" alt="License"></a>
+  <img src="https://img.shields.io/badge/dependencies-zero-brightgreen.svg?style=flat-square" alt="Zero Dependencies">
+  <a href="https://pepy.tech/project/colorich"><img src="https://img.shields.io/pypi/dm/colorich?style=flat-square&color=orange" alt="Downloads"></a>
+</p>
 
-enrich - Return colored and decorated font for rgb values or for hex.\
-e.g. print(enrich("SeaGreen", (45, 140, 85)), "\n")\
-This example will color and print the text "<span style="color: #2d8c55">SeaGreen</span>" in the rgb color of (45, 140, 85) and start a new line.
+---
 
-dye - Only determine the foreground color of the font but can accept a dictionary of strings with their different colors values.\
-e.g. print(dye({"Periwinkle ": "periwinkle ", "Iceberg ": "Ice berg", "and ": "", "Forest green\n": "Forest green"}))\
-This example will color and print the text "<span style="color: #CCCCFF">Periwinkle</span> <span style="color: #71A6D2">Iceberg</span> and <span style="color: #5FA777">Forest green</span>" with several colors - every word will be colored with the color that is writen next to it, notice that the word "and" won't be colored because no color has been assigned to it.
+## ✨ Features
 
-printr - Prints the decorated colorized text that have sent as argument.\
-e.g. printr("Bold Turquoise on MediumSlateBlue", (64, 224, 208), "#7B68EE", "B", "\n")\
-This example will color, decorate and print the text "<span style="color: #45B5AA; background-color: #7B68EE; font-weight: bold;">Bold Turquoise on MediumSlateBlue</span>".\
-As it says, (64, 224, 208) is the text color, #7B68EE is the background color, "B" makes it bold, and \n will start a new line.
+- 🌈 **TrueColor (24-bit ANSI)** — Full support for 16.7 million colors using RGB tuples `(r, g, b)` and Hex codes (`"#7B68EE"` or `"7B68EE"`).
+- 🏷️ **140+ Built-in CSS Color Names** — Use standard names like `DarkTurquoise`, `Coral`, `SlateBlue`, `MediumSeaGreen`.
+- 🔠 **Flexible Name Matching** — Case-insensitive and space-tolerant (e.g., `"SeaGreen"`, `"sea green"`, and `"SEA GREEN"` all work identically).
+- ✨ **Text Decorations** — Bold (`b`), Underline (`u`), Italic (`i`), Dim, Reversed, Crossed-out, and more.
+- 🎨 **Multi-Color Printing Utilities**:
+  - `dye()`: Colorize phrases word-by-word with a Python dictionary.
+  - `printd()`: Rapid inline multi-color printing using delimiter syntax (`"Text ; Color"`).
+- 🌐 **Expandable Palette** — Call `expand()` to dynamically unlock 1,000+ additional named colors.
+- 🪶 **Zero External Dependencies** — Lightweight, fast to import, and pure Python.
+- 💻 **Cross-Platform** — Seamlessly works on Windows Terminal, PowerShell, CMD, macOS, and Linux.
 
-printd - Prints text that have sent as an argument in multiple colors.\
-e.g. printd("Red ; red", "Slate Blue ; slateBlue", "default color ", "and; Orange Red\n; OrangeRed")\
-This example will color and print the text "<span style="color: red">Red</span> <span style="color: #6A5ACD ">Slate Blue</span> default color <span style="color: #FF4500 ">and; Orange Red</span>" with several colors and eventualy will start a new line, notice that the delimeter sign ";" only apllyed as a delimeter to the last time of it's use.
+---
 
-show - prints all the colors and decorations name available and how it looks like.
+## 📦 Installation
 
-Examples are in the bottom of the main file.
+Install `colorich` via pip:
 
+```bash
+pip install colorich
+```
 
+---
+
+## 🚀 Quick Start
+
+```python
+from colorich import printr, enrich, dye, printd
+
+# 1. Quick colored prints
+printr("Hello, vibrant world!", fore="Cyan", decor="bold")
+printr("Custom RGB text on Hex background", fore=(255, 215, 0), back="#191970")
+
+# 2. Get enriched strings for f-strings or loggers
+status_badge = enrich("[SUCCESS]", fore="LimeGreen", decor="bold")
+print(f"{status_badge} Operation completed in 0.42s")
+
+# 3. Multi-color sentence using a dictionary
+colored_msg = dye({
+    "Error: ": "Crimson",
+    "File not found in ": "White",
+    "/usr/local/bin": "Gold"
+})
+print(colored_msg)
+
+# 4. Rapid inline delimiter coloring
+printd("Server: ; LightSkyBlue", "ONLINE\n; SpringGreen")
+```
+
+---
+
+## 📖 In-Depth Usage & Examples
+
+### 1. Direct Printing with `printr()`
+`printr()` is a drop-in replacement for `print()` with added styling parameters:
+
+```python
+from colorich import printr
+
+# By color name
+printr("Warning: Disk space low!", fore="OrangeRed", decor="bold")
+
+# By Hexadecimal color
+printr("Custom Brand Color", fore="#4A90E2", back="#1E1E1E")
+
+# By RGB Tuple
+printr("Deep Violet", fore=(138, 43, 226), decor="underline")
+
+# Pass standard print kwargs (e.g. end, sep)
+printr("Processing...", fore="Yellow", end=" ")
+printr("Done!", fore="LimeGreen", decor="bold")
+```
+
+---
+
+### 2. Formatting Strings with `enrich()`
+`enrich()` returns the raw ANSI-coded string, making it perfect for custom logging, CLI banners, and formatted output:
+
+```python
+from colorich import enrich
+
+msg = enrich("Important Announcement", fore="Gold", back="MidnightBlue", decor="b")
+print(f"*** {msg} ***")
+```
+
+---
+
+### 3. Multi-Color Phrases with `dye()`
+Pass a dictionary mapping strings to their respective colors:
+
+```python
+from colorich import dye
+
+formatted = dye({
+    "System Status: ": "Gray",
+    "ACTIVE ": "LimeGreen",
+    "(3 nodes connected)": "DeepSkyBlue"
+})
+print(formatted)
+```
+
+---
+
+### 4. Inline Multi-Coloring with `printd()`
+Combine words and colors separated by `;` without constructing complex dictionaries:
+
+```python
+from colorich import printd
+
+printd(
+    "CPU: ; DarkSlateGray",
+    "24% ; PaleGreen",
+    " | Memory: ; DarkSlateGray",
+    "78% ; Coral",
+    " | Status: ; DarkSlateGray",
+    "Warning\n; OrangeRed"
+)
+```
+
+---
+
+### 5. Inspect Available Colors with `show()`
+Curious what colors and styles are available in your terminal? Use `show()`:
+
+```python
+from colorich import show, expand
+
+# Preview foreground colors with their Hex and RGB codes
+show("fore")
+
+# Preview background colors
+show("back")
+
+# Preview available text decorations
+show("decor")
+
+# Unlock and show 1,000+ extended colors from the web catalog
+expand()
+show("fore", more=True)
+```
+
+---
+
+## 🎨 Supported Styles & Decorations
+
+You can pass either the full name or the shorthand identifier to `decor`:
+
+| Style / Decoration | Shorthand | Description |
+| :--- | :---: | :--- |
+| `bold` | `"b"` | Emboldened, highlighted text |
+| `italic` | `"i"` | Italicized text *(terminal support dependent)* |
+| `underline` | `"u"` | Underlined text |
+| `dark` | - | Dim / faint brightness |
+| `reverse` | - | Swaps foreground and background colors |
+| `crossed` | - | Strikethrough text |
+| `blink` | - | Blinking text |
+
+---
+
+## 💡 Color Specifications Supported
+
+`colorich` understands colors in three different formats:
+
+1. **Named Colors**: Case-insensitive and space-agnostic:
+   - `"SeaGreen"`, `"seagreen"`, `"sea green"`
+   - 140+ CSS/W3C standard colors (e.g., `Tomato`, `RoyalBlue`, `Gold`, `AliceBlue`, `Chartreuse`, etc.)
+2. **Hex Strings**:
+   - Standard 6-digit hex: `"#FF5733"` or `"FF5733"`
+   - 3-digit shorthand hex: `"#FFF"` or `"FFF"`
+3. **RGB Tuples**:
+   - `(r, g, b)` where each value is an integer between `0` and `255`:
+   - `(255, 105, 180)` (Hot Pink), `(0, 206, 209)` (Dark Turquoise)
+
+---
+
+## 🛠️ Compatibility
+
+`colorich` utilizes standard 24-bit TrueColor ANSI escape sequences (`ESC[38;2;R;G;Bm`). It is tested and compatible with:
+
+- **Windows**: Windows Terminal, PowerShell 5+, Command Prompt (Windows 10/11), VS Code Terminal
+- **macOS**: Terminal.app, iTerm2, Alacritty, Kitty
+- **Linux**: GNOME Terminal, Konsole, XFCE Terminal, Alacritty, Kitty, and all modern terminal emulators
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+<p align="center">
+  Crafted with ❤️ by <a href="https://github.com/EthanA120">Ethan Amar</a>
+</p>

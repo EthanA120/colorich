@@ -12,20 +12,19 @@ printd - Prints text that have sent as an argument in multiple colors.
 Examples in main
 """
 
-from __future__ import print_function
-
 import json
-from os import getenv, system
-import requests
+import os
+import sys
+from typing import Optional, Union, Tuple, List, Dict, Any
 
-__ALL__ = ["_check_value", 'enrich', 'printr', 'dye', 'printd', 'show']
+__all__ = ["expand", "enrich", "printr", "dye", "printd", "show"]
 
-system("color")
-if getenv("CLICOLOR", "1") == "0":
-    try:
-        raise EnvironmentError
-    except EnvironmentError:
-        print('ANSI colors disabled')
+if os.name == "nt":
+    os.system("")
+
+if os.getenv("CLICOLOR", "1") == "0":
+    _OPEN = ""
+    _CLOSE = ""
 else:
     _OPEN = "\x1b["
     _CLOSE = "\x1b[0m"
@@ -357,81 +356,93 @@ _URL_COLORS_NAME = []
 _EXPANDED = False
 
 
-def expand():
+def expand(timeout: float = 10.0) -> bool:
     """
-    Expands the colors list, extra colors will be available if this function will be executed
+    Expands the colors list, extra colors will be available if this function is executed.
+    Uses standard library urllib to avoid external dependencies.
     """
     global _URL_COLORS
     global _URL_COLORS_NAME
     global _EXPANDED
 
-    from requests.exceptions import ConnectionError
+    import urllib.request
+    import urllib.error
+
+    url = "https://raw.githubusercontent.com/jonathantneal/color-names/master/color-names.json"
     try:
-        _GET_COLORS = requests.get("https://raw.githubusercontent.com/jonathantneal/color-names/master/color-names.json")
-    except ConnectionError as e:
-        print(e, "\n")
-        _GET_COLORS = {None: None, "": None}
+        req = urllib.request.Request(url, headers={"User-Agent": "colorich"})
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except Exception as e:
+        print(f"Warning: Could not fetch expanded color catalog: {e}\n")
+        return False
     else:
-        [_URL_COLORS.update({color.lower().replace(" ", ""): value.upper()})
-         for value, color in json.loads(_GET_COLORS.text).items()]
-        [_URL_COLORS_NAME.append(color_name) for color_name in json.loads(_GET_COLORS.text).values()]
+        for hex_val, name in data.items():
+            key = name.lower().replace(" ", "")
+            _URL_COLORS[key] = hex_val.upper()
+            _URL_COLORS_NAME.append(name)
         _EXPANDED = True
+        return True
 
 
 def _check_value(value=None, kind=None):
     """
-    Check if value is valid and returns the right string to enrich the text.\n
+    Check if value is valid and returns the right string to enrich the text.
     :param value: Value of color (hexadecimal or RGB)
-    :param kind: Kind of decoration ('fore', 'back' etc...)
+    :param kind: Kind of decoration ('fore', 'back', 'decor')
     :return: encoded string suitable for ANSI formatting
-    :type value: str or tuple or None
+    :type value: str or tuple or list or None
     :type kind: str or None
-    :rtype: str
+    :rtype: str or None
     """
     RGB = {'fore': '38', 'back': '48'}
 
-    if value is not None:
-        if type(value) is str and not value.isdigit():
-            value = value.lower().replace(" ", "")
-            if value == "":
-                return None
-            elif kind in RGB:
-                if value not in _COLORS and value not in _URL_COLORS and value[0] != "#":
-                    value = "#" + value
+    if value is None:
+        return None
 
-                if value[0] == "#" and len(value) == 7:
-                    r = int("0x" + value[1:3], 16)
-                    g = int("0x" + value[3:5], 16)
-                    b = int("0x" + value[5:7], 16)
-                    return f"{RGB[kind]};2;{r};{g};{b}"
+    if isinstance(value, str):
+        val = value.strip().lower().replace(" ", "")
+        if not val:
+            return None
 
-                elif value in _COLORS or value in _URL_COLORS:
-                    if value in _COLORS:
-                        value = _COLORS[value][0]
-                    else:
-                        value = _URL_COLORS[value]
-                    r = int("0x" + value[1:3], 16)
-                    g = int("0x" + value[3:5], 16)
-                    b = int("0x" + value[5:7], 16)
-                    return f"{RGB[kind]};2;{r};{g};{b}"
-
+        if kind in RGB:
+            hex_str = None
+            if val.startswith("#"):
+                raw_hex = val[1:]
+                if len(raw_hex) == 3 and all(c in "0123456789abcdef" for c in raw_hex):
+                    hex_str = "".join(c * 2 for c in raw_hex)
+                elif len(raw_hex) == 6 and all(c in "0123456789abcdef" for c in raw_hex):
+                    hex_str = raw_hex
+            elif val in _COLORS and _COLORS[val] is not None:
+                hex_str = _COLORS[val][0][1:]
+            elif val in _URL_COLORS and _URL_COLORS[val]:
+                hex_str = _URL_COLORS[val].lstrip("#")
+            elif (len(val) == 6 or len(val) == 3) and all(c in "0123456789abcdef" for c in val):
+                if len(val) == 3:
+                    hex_str = "".join(c * 2 for c in val)
                 else:
-                    return None
+                    hex_str = val
 
-            elif kind == "decor":
-                return _DECOR[value]
+            if hex_str:
+                r = int(hex_str[0:2], 16)
+                g = int(hex_str[2:4], 16)
+                b = int(hex_str[4:6], 16)
+                return f"{RGB[kind]};2;{r};{g};{b}"
+            return None
 
-        elif kind in RGB and type(value) is tuple:
-            r = value[0]
-            g = value[1]
-            b = value[2]
+        elif kind == "decor":
+            return _DECOR.get(val)
+
+    elif kind in RGB and isinstance(value, (tuple, list)) and len(value) == 3:
+        try:
+            r = int(value[0])
+            g = int(value[1])
+            b = int(value[2])
             return f"{RGB[kind]};2;{r};{g};{b}"
+        except (ValueError, TypeError):
+            return None
 
-        else:
-            return value
-
-    else:
-        return value
+    return None
 
 
 def enrich(text, fore=None, back=None, decor=None):
@@ -553,7 +564,7 @@ def show(text, more=False):
                 printr(color_name + ": " + color_hex + ", " + color_rgb, "White", color_hex)
 
         if _EXPANDED and more:
-            print(f"The following {text}ground colors are available to use from the expended list:")
+            print(f"The following {text}ground colors are available to use from the expanded list:")
             for color in range(len(_URL_COLORS_NAME)):
                 color_name = _URL_COLORS_NAME[color]
                 color_hex = _URL_COLORS[_URL_COLORS_NAME[color].lower().replace(" ", "")]
